@@ -2,21 +2,46 @@ import Foundation
 import ARKit
 import SceneKit
 import ModelIO
+import React
+
+// Define typealias for React Native promise blocks
+typealias RCTPromiseResolveBlock = @convention(block) (Any?) -> Void
+typealias RCTPromiseRejectBlock = @convention(block) (String?, String?, Error?) -> Void
 
 @objc(RNARKitScanner)
 class RNARKitScanner: NSObject {
     static var sceneView: ARSCNView?
     static var capturedScene: SCNScene?
 
-    @objc func startScan(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
+    @objc func startScan(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async {
+            // Check if ARKit is supported
+            guard ARWorldTrackingConfiguration.isSupported else {
+                reject("arkit_not_supported", "ARKit is not supported on this device", nil)
+                return
+            }
+
             let sceneView = ARSCNView(frame: UIScreen.main.bounds)
             sceneView.automaticallyUpdatesLighting = true
             let config = ARWorldTrackingConfiguration()
+
+            // Check and configure scene reconstruction
             if #available(iOS 13.4, *) {
-                config.sceneReconstruction = .mesh
+                if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
+                    config.sceneReconstruction = .mesh
+                    print("Scene reconstruction enabled")
+                } else {
+                    print("Scene reconstruction not supported on this device")
+                }
+            } else {
+                print("iOS version does not support scene reconstruction")
             }
-            config.environmentTexturing = .automatic
+
+            // Set environment texturing only if supported
+            if ARWorldTrackingConfiguration.isSupported {
+                config.environmentTexturing = .automatic
+            }
+
             sceneView.session.run(config)
             RNARKitScanner.sceneView = sceneView
             resolve("Scan started")
@@ -52,7 +77,16 @@ class RNARKitScanner: NSObject {
         }
         let url = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("scan.obj")
         do {
-            let asset = MDLAsset(scnScene: scene)
+            let asset = MDLAsset()
+
+            scene.rootNode.enumerateChildNodes { (node, _) in
+                if let geometry = node.geometry {
+                    // Convert SCNGeometry to MDLMesh
+                    let mdlMesh = MDLMesh(scnGeometry: geometry)
+                    asset.add(mdlMesh)
+                }
+            }
+
             try asset.export(to: url)
             resolve(url.path)
         } catch {

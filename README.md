@@ -16,7 +16,12 @@ A React Native package for iOS that utilizes ARKit to scan real-life objects and
 ## Requirements
 
 - iOS 14.0 or later
-- iPhone or iPad with LiDAR sensor (iPhone 12 Pro/Pro Max or newer, iPad Pro 2020 or newer)
+- iPhone or iPad with LiDAR sensor:
+  - iPhone 12 Pro/Pro Max or newer Pro models
+  - iPhone 13 Pro/Pro Max
+  - iPhone 14 Pro/Pro Max
+  - iPhone 15 Pro/Pro Max (Note: regular iPhone 15 does not have LiDAR)
+  - iPad Pro 2020 or newer
 - React Native 0.70.0 or later
 - React 17.0.0 or later
 
@@ -252,10 +257,29 @@ try {
 
 ### Common Issues
 
-- **"ARKit is not supported on this device"**: Make sure you're using a device with LiDAR (iPhone 12 Pro/Pro Max or newer, iPad Pro 2020 or newer)
+- **"Scene Reconstruction type not supported"**: This occurs on devices without LiDAR (regular iPhone 15, iPhone 14, etc.). Only Pro models have LiDAR sensors.
+- **"ARKit is not supported on this device"**: Make sure you're using a compatible iOS device
 - **Poor scan quality**: Ensure good lighting and move slowly around the object
 - **Export fails**: Make sure you've completed a scan before attempting to export
+
+## Device Compatibility
+
+**✅ Supported (with LiDAR):**
+- iPhone 12 Pro, 12 Pro Max
+- iPhone 13 Pro, 13 Pro Max
+- iPhone 14 Pro, 14 Pro Max
+- iPhone 15 Pro, 15 Pro Max
+- iPad Pro (4th generation) 2020 and newer
+
+**❌ Not Supported (no LiDAR):**
+- iPhone 15, 15 Plus
+- iPhone 14, 14 Plus
+- iPhone 13, 13 mini
+- iPhone 12, 12 mini
+- All older iPhone models
+- Standard iPads
 
 ## License
 
 MIT
+```
