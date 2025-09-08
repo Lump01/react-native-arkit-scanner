@@ -1,0 +1,24 @@
+{
+  "name": "react-native-arkit-scanner",
+  "version": "0.1.0",
+  "description": "ARKit LiDAR scanner for React Native with export to USDZ, OBJ+MTL, STL",
+  "main": "index.js",
+  "scripts": {
+    "example": "cd example && yarn ios"
+  },
+  "keywords": [
+    "react-native",
+    "arkit",
+    "lidar",
+    "3d-scan",
+    "usdz",
+    "obj",
+    "stl"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": ">=17.0.0",
+    "react-native": ">=0.70.0"
+  }
+}
