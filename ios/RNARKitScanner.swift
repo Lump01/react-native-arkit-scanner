@@ -8,7 +8,7 @@ class RNARKitScanner: NSObject {
     static var sceneView: ARSCNView?
     static var capturedScene: SCNScene?
 
-    @objc func startScan() {
+    @objc func startScan(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
         DispatchQueue.main.async {
             let sceneView = ARSCNView(frame: UIScreen.main.bounds)
             sceneView.automaticallyUpdatesLighting = true
@@ -19,13 +19,15 @@ class RNARKitScanner: NSObject {
             config.environmentTexturing = .automatic
             sceneView.session.run(config)
             RNARKitScanner.sceneView = sceneView
+            resolve("Scan started")
         }
     }
 
-    @objc func stopScan() {
+    @objc func stopScan(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
         DispatchQueue.main.async {
             RNARKitScanner.sceneView?.session.pause()
             RNARKitScanner.capturedScene = RNARKitScanner.sceneView?.scene
+            resolve("Scan stopped")
         }
     }
 
@@ -65,23 +67,24 @@ class RNARKitScanner: NSObject {
         }
         let url = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("scan.stl")
         do {
-            var stl = "solid scan\n"
-            for node in scene.rootNode.childNodes {
-                if let geom = node.geometry {
-                    for element in geom.sources {
-                        if element.semantic == .vertex {
-                            let verts = element.data
-                            stl += "  facet normal 0 0 0\n"
-                            stl += "    outer loop\n"
-                            // simplified export for demo
-                            stl += "    endloop\n"
-                            stl += "  endfacet\n"
-                        }
-                    }
-                }
+            // Convert SCNScene to MDLAsset
+            let asset = MDLAsset(scnScene: scene)
+
+            // Create binary STL data
+            let allocator = MDLMeshBufferDataAllocator()
+            let data = allocator.newBuffer(with: Data(), type: .vertex)
+
+            // Export to STL using ModelIO
+            let stlAsset = MDLAsset()
+
+            // Add each mesh from the original asset to the STL asset
+            for mesh in asset.meshes {
+                let stlMesh = mesh.copy() as! MDLMesh
+                stlAsset.add(stlMesh)
             }
-            stl += "endsolid scan\n"
-            try stl.write(to: url, atomically: true, encoding: .utf8)
+
+            // Export the STL file
+            try stlAsset.export(to: url)
             resolve(url.path)
         } catch {
             reject("export_error", error.localizedDescription, error)
